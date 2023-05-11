@@ -1,6 +1,17 @@
 # TMDL Tool
 
-The TMDL Tool is a .NET Core console application that automates the process of deploying a Tabular Model to a Power BI workspace. The tool supports both pulling a Tabular Model from a workspace and deploying a Tabular Model to a workspace. The tool is designed to be used from CLI.
+The TMDL Tool is a .NET Core console application that automates the process of deploying a Tabular Model to a Power BI workspace. The tool supports both pulling a Tabular Model from a workspace and deploying a Tabular Model to a workspace. The tool is designed to be used from CLI. TMDL uses Azure Service Principal app authentication to authenticate with the Power BI API.
+
+## About TMDL
+
+[TMDL](https://learn.microsoft.com/en-us/analysis-services/tmdl/tmdl-overview?view=power-bi-premium-current) is Tabular Model Definition Language (TMDL) is an object model definition syntax for tabular data models at compatibility level 1200 or higher.
+
+Key elements of TMDL include:
+
+* Full compatibility with the entire Tabular Object Model (TOM).
+* Text-based and optimized for human interaction and readability. TMDL uses a grammar syntax similar to YAML. Each TMDL object is represented in text with minimal delimiters and uses indentation to demark parent-child relationships.
+* Better editing experience, especially on properties with embed expressions from different content-types, like Data Analysis Expression (DAX) and M.
+* Better for collaboration because of its folder representation where each model object has an individual file representation, making it more source control friendly.
 
 ## Installation
 
@@ -78,3 +89,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 This project is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license.
+
