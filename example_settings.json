@@ -1,0 +1,9 @@
+{
+    "WorkspaceXMLA": "powerbi://api.powerbi.com/v1.0/myorg/MyWorkSpace",
+    "DatasetName": "MyDatasetName",
+    "TmdlFolderPath": "tmdl\\MyDatasetName",
+    "Action": "pull",
+    "AppId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "AppSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "TenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
