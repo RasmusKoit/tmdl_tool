@@ -231,7 +231,7 @@ namespace tmdl_tool
                 {
                     if (server == null) { return; }
                     var database = server.Databases.GetByName(datasetName);
-                    TmdlSerializer.SerializeModel(database.Model, tmdlfolderPath);
+                    TmdlSerializer.SerializeModelToFolder(database.Model, tmdlfolderPath);
                 }
             }
             catch (Exception ex)
@@ -254,7 +254,7 @@ namespace tmdl_tool
         {
             try
             {
-                var model = TmdlSerializer.DeserializeModel(tmdlfolderPath);
+                var model = TmdlSerializer.DeserializeModelFromFolder(tmdlfolderPath);
                 using (var server = Connect(workspaceXMLA, appId, appSecret, tenantId))
                 {
                     if (server == null) { return; }
