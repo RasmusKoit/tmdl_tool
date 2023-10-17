@@ -284,7 +284,7 @@ namespace tmdl_tool
             try
             {
                 var server = new Server();
-                string connectionString = $"DataSource={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret};";
+                string connectionString = $"Data source={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret}";
                 server.Connect(connectionString);
                 return server;
             }
