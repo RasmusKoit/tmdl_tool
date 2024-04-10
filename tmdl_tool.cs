@@ -21,6 +21,7 @@ namespace tmdl_tool
             string appSecret;
             string tenantId;
 
+            Environment.ExitCode = ERROR_SUCCESS;
             PrintHelpIfRequested(args);
 
             GetArguments(args, out workspaceXMLA, out datasetName, out tmdlfolderPath, out action, out settingsFilePath, out appId, out appSecret, out tenantId);
@@ -28,7 +29,6 @@ namespace tmdl_tool
             GetSettings(settingsFilePath, ref workspaceXMLA, ref datasetName, ref tmdlfolderPath, ref action, ref appId, ref appSecret, ref tenantId);
 
             PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId);
-            Environment.ExitCode = ERROR_SUCCESS;
 
         }
 
@@ -60,7 +60,7 @@ namespace tmdl_tool
                 Console.WriteLine("  tmdl_tool -ai \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\" -as \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" -ti \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\" -a \"deploy\"");
                 Console.WriteLine("  tmdl_tool deploy");
                 Console.WriteLine("  tmdl_tool pull");
-                Environment.Exit(0);
+                Environment.Exit(ERROR_SUCCESS);
             }
         }
 
