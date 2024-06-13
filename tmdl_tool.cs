@@ -284,6 +284,15 @@ namespace tmdl_tool
             try
             {
                 var server = new Server();
+
+                // Check if we have an access token in Environment variable
+                var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
+                if (null != tokenString)
+                {
+                    Console.WriteLine("Using Access Token from Environment Variable");
+                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
+                    server.AccessToken = accessTokenObj;
+                };
                 string connectionString = $"Data source={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret}";
                 server.Connect(connectionString);
                 return server;
