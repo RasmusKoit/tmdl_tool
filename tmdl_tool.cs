@@ -9,6 +9,8 @@ namespace tmdl_tool
         private const int ERROR_INVALID_ACTION = 0x667;
         private const int ERROR_PATH_NOT_FOUND = 0x3;
         private const int ERROR_NETWORK_ACCESS = 0x44;
+        private static string VersionString = "";
+
 
         static void Main(string[] args)
         {
@@ -21,7 +23,16 @@ namespace tmdl_tool
             string appSecret;
             string tenantId;
 
+            // Setting tmdl_tool.VersionString
+            var assemblyInfo = System.Reflection.Assembly.GetExecutingAssembly().GetName();
+            var tmdlLib = System.Reflection.Assembly.GetAssembly(typeof(Server)); 
+            var libName = tmdlLib?.GetName()?.Name ?? "Unknown";
+            var libVersion = tmdlLib?.GetName()?.Version?.ToString() ?? "Unknown";
+            VersionString = $"{assemblyInfo.Name} v.{assemblyInfo.Version}, {libName}: {libVersion}";
+            Console.WriteLine($"Starting {VersionString}");
+
             Environment.ExitCode = ERROR_SUCCESS;
+
             PrintHelpIfRequested(args);
 
             GetArguments(args, out workspaceXMLA, out datasetName, out tmdlfolderPath, out action, out settingsFilePath, out appId, out appSecret, out tenantId);
@@ -29,7 +40,6 @@ namespace tmdl_tool
             GetSettings(settingsFilePath, ref workspaceXMLA, ref datasetName, ref tmdlfolderPath, ref action, ref appId, ref appSecret, ref tenantId);
 
             PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId);
-
         }
 
         /// <summary>
@@ -213,7 +223,6 @@ namespace tmdl_tool
             {
                 deploy_tmdl(workspaceXMLA, datasetName, tmdlfolderPath, appId, appSecret, tenantId);
             }
-
         }
 
 
@@ -289,7 +298,7 @@ namespace tmdl_tool
                 var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
                 if (null != tokenString)
                 {
-                    Console.WriteLine("Using Access Token from Environment Variable");
+                    Console.WriteLine($"Using Access Token from Environment Variable");
                     var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 };
