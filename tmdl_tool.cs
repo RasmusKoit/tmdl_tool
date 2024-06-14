@@ -294,7 +294,7 @@ namespace tmdl_tool
                 var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
                 if (null != tokenString)
                 {
-                    Console.WriteLine($"Using Access Token from Environment Variable");
+                    Console.WriteLine("Using Access Token from Environment Variable");
                     var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 };
