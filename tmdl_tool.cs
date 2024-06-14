@@ -11,7 +11,6 @@ namespace tmdl_tool
         private const int ERROR_NETWORK_ACCESS = 0x44;
         private static string VersionString = "";
 
-
         static void Main(string[] args)
         {
             string workspaceXMLA;
@@ -25,7 +24,7 @@ namespace tmdl_tool
 
             // Setting tmdl_tool.VersionString
             var assemblyInfo = System.Reflection.Assembly.GetExecutingAssembly().GetName();
-            var tmdlLib = System.Reflection.Assembly.GetAssembly(typeof(Server)); 
+            var tmdlLib = System.Reflection.Assembly.GetAssembly(typeof(Server));
             var libName = tmdlLib?.GetName()?.Name ?? "Unknown";
             var libVersion = tmdlLib?.GetName()?.Version?.ToString() ?? "Unknown";
             VersionString = $"{assemblyInfo.Name} v.{assemblyInfo.Version}, {libName}: {libVersion}";
@@ -198,7 +197,6 @@ namespace tmdl_tool
             }
         }
 
-
         /// <summary>
         /// Performs the specified action (pull or deploy) on the specified Power BI dataset using the specified TMDL folder.
         /// </summary>
@@ -225,7 +223,6 @@ namespace tmdl_tool
             }
         }
 
-
         /// <summary>
         /// Pulls the TMDL from the specified Power BI dataset and saves it to the specified TMDL folder.
         /// </summary>
@@ -251,7 +248,6 @@ namespace tmdl_tool
                 Environment.ExitCode = ERROR_PATH_NOT_FOUND;
             }
         }
-
 
         /// <summary>
         /// Deploys the TMDL from the specified TMDL folder to the specified Power BI dataset.
@@ -332,7 +328,6 @@ namespace tmdl_tool
             }
         }
 
-
         /// <summary>
         /// Represents the settings used by the tmdl_tool program.
         /// </summary>
@@ -358,12 +353,9 @@ namespace tmdl_tool
             /// </summary>
             public string? Action { get; set; }
 
-
             public string? AppId { get; set; }
             public string? AppSecret { get; set; }
             public string? TenantId { get; set; }
-
-
         }
     }
 }
