@@ -46,7 +46,6 @@ namespace tmdl_tool
 
             PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId, accessToken);
 
-            Environment.ExitCode = ERROR_SUCCESS;
         }
 
         /// <summary>
@@ -274,6 +273,7 @@ namespace tmdl_tool
                     LogToConsole($"Serializing model from {database.Name} to {tmdlfolderPath}");
                     TmdlSerializer.SerializeModelToFolder(database.Model, tmdlfolderPath);
                     LogToConsole($"Model pulled successfully to {tmdlfolderPath}");
+                    Environment.ExitCode = ERROR_SUCCESS;
                 }
             }
             catch (Exception ex)
@@ -305,6 +305,7 @@ namespace tmdl_tool
                         LogToConsole($"Saving changes to {datasetName}");
                         remoteDatabase.Model.SaveChanges();
                         LogToConsole($"Model deployed successfully to {datasetName}");
+                        Environment.ExitCode = ERROR_SUCCESS;
                     }
                 }
             }
@@ -312,7 +313,12 @@ namespace tmdl_tool
             {
                 Console.WriteLine(ex.GetType().ToString());
                 Console.WriteLine(ex.ToString());
-                Environment.ExitCode = ERROR_PATH_NOT_FOUND;
+                if (ex.ToString().Contains("path does not exists"))
+                {
+                    Console.WriteLine("Error: The path does not exist.");
+                    Console.WriteLine("Please check the path and try again.");
+                    Environment.ExitCode = ERROR_PATH_NOT_FOUND;
+                }
             }
         }
 
