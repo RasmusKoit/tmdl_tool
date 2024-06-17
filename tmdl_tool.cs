@@ -22,7 +22,7 @@ namespace tmdl_tool
         private static string appSecret = "";
         private static string tenantId = "";
         private static string accessToken = "";
-        private static bool verbose = false;
+        private static bool verbose = true;
 
         static void Main(string[] args)
         {
@@ -68,7 +68,7 @@ namespace tmdl_tool
                 Console.WriteLine("  -as\tThe application secret of the Azure AD app \n\t--appsecret \"<secret>\"");
                 Console.WriteLine("  -ti\tThe tenant ID of the Azure AD app \n\t--tenantid \"<id>\"");
                 Console.WriteLine("  -at\tExternally aquired Access Token for Azure AD app \n\t--accessToken \"<id>\"");
-                Console.WriteLine("  -v\tShow progress on STDOUT \n\t--verbose\n");
+                Console.WriteLine("  -v\tShow progress on STDOUT \n\t--verbose \"<true|false>\" (default: true)");
                 Console.WriteLine();
                 Console.WriteLine("  -h\tShow this help message \n\t--help\n");
                 Console.WriteLine();
@@ -146,7 +146,7 @@ namespace tmdl_tool
                             accessToken = value ?? "";
                             break;
                         case "--verbose":
-                            verbose = true;
+                            verbose = bool.Parse(value);
                             break;
                         case "-w":
                             workspaceXMLA = value ?? "";
@@ -219,7 +219,7 @@ namespace tmdl_tool
                 appSecret = settings?.AppSecret ?? appSecret;
                 tenantId = settings?.TenantId ?? tenantId;
                 accessToken = settings?.AccessToken ?? accessToken;
-                verbose = settings?.Verbose ?? false;
+                verbose = settings?.Verbose ?? verbose;
             }
         }
 
@@ -327,7 +327,7 @@ namespace tmdl_tool
         /// </summary>
         /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
         /// <returns>A Server object representing the connected workspace, or null if the connection failed.</returns>
-        static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
+        private static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
         {
 
             try
@@ -382,7 +382,7 @@ namespace tmdl_tool
         /// <summary>
         /// Represents the settings used by the tmdl_tool program.
         /// </summary>
-        public class Settings
+        private class Settings
         {
             /// <summary>
             /// The URL of the Power BI workspace.
@@ -427,7 +427,7 @@ namespace tmdl_tool
             /// <summary>
             /// Verbose output
             /// </summary>
-            public bool Verbose { get; set; }
+            public bool? Verbose { get; set; }
         }
     }
 }
