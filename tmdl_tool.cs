@@ -9,18 +9,23 @@ namespace tmdl_tool
         private const int ERROR_INVALID_ACTION = 0x667;
         private const int ERROR_PATH_NOT_FOUND = 0x3;
         private const int ERROR_NETWORK_ACCESS = 0x44;
+        private const int ERROR_UNEXPECTED_ERROR = 0x999;
+
         private static string VersionString = "";
+
+        private static string workspaceXMLA = "";
+        private static string datasetName = "";
+        private static string tmdlfolderPath = "";
+        private static string action = "";
+        private static string settingsFilePath = "";
+        private static string appId = "";
+        private static string appSecret = "";
+        private static string tenantId = "";
+        private static string accessToken = "";
+        private static bool verbose = false;
 
         static void Main(string[] args)
         {
-            string workspaceXMLA;
-            string datasetName;
-            string tmdlfolderPath;
-            string action;
-            string settingsFilePath;
-            string appId;
-            string appSecret;
-            string tenantId;
 
             // Setting tmdl_tool.VersionString
             var assemblyInfo = System.Reflection.Assembly.GetExecutingAssembly().GetName();
@@ -28,24 +33,27 @@ namespace tmdl_tool
             var libName = tmdlLib?.GetName()?.Name ?? "Unknown";
             var libVersion = tmdlLib?.GetName()?.Version?.ToString() ?? "Unknown";
             VersionString = $"{assemblyInfo.Name} v.{assemblyInfo.Version}, {libName}: {libVersion}";
-            Console.WriteLine($"Starting {VersionString}");
 
-            Environment.ExitCode = ERROR_SUCCESS;
+            Environment.ExitCode = ERROR_UNEXPECTED_ERROR;
 
             PrintHelpIfRequested(args);
 
-            GetArguments(args, out workspaceXMLA, out datasetName, out tmdlfolderPath, out action, out settingsFilePath, out appId, out appSecret, out tenantId);
+            GetArguments(args);
 
-            GetSettings(settingsFilePath, ref workspaceXMLA, ref datasetName, ref tmdlfolderPath, ref action, ref appId, ref appSecret, ref tenantId);
+            GetSettings(settingsFilePath);
 
-            PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId);
+            LogToConsole("Starting");
+
+            PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId, accessToken);
+
+            Environment.ExitCode = ERROR_SUCCESS;
         }
 
         /// <summary>
         /// Prints the help message if the "--help" or "-h" option is present in the command-line arguments.
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
-        static void PrintHelpIfRequested(string[] args)
+        private static void PrintHelpIfRequested(string[] args)
         {
             if (args.Contains("--help") || args.Contains("-h"))
             {
@@ -60,7 +68,13 @@ namespace tmdl_tool
                 Console.WriteLine("  -ai\tThe application ID of the Azure AD app \n\t--appid \"<id>\"");
                 Console.WriteLine("  -as\tThe application secret of the Azure AD app \n\t--appsecret \"<secret>\"");
                 Console.WriteLine("  -ti\tThe tenant ID of the Azure AD app \n\t--tenantid \"<id>\"");
+                Console.WriteLine("  -at\tExternally aquired Access Token for Azure AD app \n\t--accessToken \"<id>\"");
+                Console.WriteLine("  -v\tShow progress on STDOUT \n\t--verbose\n");
+                Console.WriteLine();
                 Console.WriteLine("  -h\tShow this help message \n\t--help\n");
+                Console.WriteLine();
+                Console.WriteLine("Environment:");
+                Console.WriteLine("  Use an Environment Variable `tmdl_accessToken` to pass a Bearer Access Token to the PowerBI Server");
                 Console.WriteLine();
                 Console.WriteLine("Examples:");
                 Console.WriteLine("  tmdl_tool --workspacexmla \"powerbi://api.powerbi.com/v1.0/myorg/MyWorkspace\" --datasetname \"MyDataset\" --tmdlfolderpath \"C:\\TMDL\" --action \"pull\"");
@@ -73,6 +87,14 @@ namespace tmdl_tool
             }
         }
 
+        private static void LogToConsole(string message)
+        {
+            if (!verbose) return;
+            var timeStampString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            Console.WriteLine($"{timeStampString} [{VersionString}]: {message}");
+        }
+
+
         /// <summary>
         /// Parses the command-line arguments and sets the corresponding variables.
         /// </summary>
@@ -82,17 +104,8 @@ namespace tmdl_tool
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
         /// <param name="action">The action to perform (pull or deploy).</param>
         /// <param name="settingsFilePath">The path to the settings file (default: settings.json).</param>
-        private static void GetArguments(string[] args, out string workspaceXMLA, out string datasetName, out string tmdlfolderPath, out string action, out string settingsFilePath, out string appId, out string appSecret, out string tenantId)
+        private static void GetArguments(string[] args)
         {
-            workspaceXMLA = "";
-            datasetName = "";
-            tmdlfolderPath = "";
-            action = "";
-            settingsFilePath = "";
-            appId = "";
-            appSecret = "";
-            tenantId = "";
-
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
@@ -130,6 +143,12 @@ namespace tmdl_tool
                         case "--tenantid":
                             tenantId = value ?? "";
                             break;
+                        case "--accesstoken":
+                            accessToken = value ?? "";
+                            break;
+                        case "--verbose":
+                            verbose = true;
+                            break;
                         case "-w":
                             workspaceXMLA = value ?? "";
                             break;
@@ -153,6 +172,12 @@ namespace tmdl_tool
                             break;
                         case "-ti":
                             tenantId = value ?? "";
+                            break;
+                        case "-at":
+                            accessToken = value ?? "";
+                            break;
+                        case "-v":
+                            verbose = true;
                             break;
                         default:
                             Console.WriteLine($"Unknown argument: {arg}");
@@ -181,7 +206,7 @@ namespace tmdl_tool
         /// <param name="datasetName">The name of the Power BI dataset.</param>
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
         /// <param name="action">The action to perform (pull or deploy).</param>
-        private static void GetSettings(string settingsFilePath, ref string workspaceXMLA, ref string datasetName, ref string tmdlfolderPath, ref string action, ref string appId, ref string appSecret, ref string tenantId)
+        private static void GetSettings(string settingsFilePath)
         {
             settingsFilePath = string.IsNullOrEmpty(settingsFilePath) ? "settings.json" : settingsFilePath;
             if (File.Exists(settingsFilePath))
@@ -194,6 +219,8 @@ namespace tmdl_tool
                 appId = settings?.AppId ?? appId;
                 appSecret = settings?.AppSecret ?? appSecret;
                 tenantId = settings?.TenantId ?? tenantId;
+                accessToken = settings?.AccessToken ?? accessToken;
+                verbose = settings?.Verbose ?? false;
             }
         }
 
@@ -204,40 +231,49 @@ namespace tmdl_tool
         /// <param name="datasetName">The name of the Power BI dataset.</param>
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
         /// <param name="action">The action to perform (pull or deploy).</param>
-        static void PBI(string workspaceXMLA, string datasetName, string tmdlfolderPath, string action, string appId, string appSecret, string tenantId)
+        private static void PBI(string workspaceXMLA, string datasetName, string tmdlfolderPath, string action, string appId, string appSecret, string tenantId, string accessToken)
         {
             string[] actions = { "pull", "deploy" };
             if (Array.IndexOf(actions, action) < 0)
             {
-                Console.WriteLine("Please specify action as pull or deploy");
+                Console.WriteLine("Please specify action as pull or deploy (-h | --help for Help)");
                 Environment.ExitCode = ERROR_INVALID_ACTION;
+                return;
+            }
+
+            var server = Connect(workspaceXMLA, appId, appSecret, tenantId, accessToken);
+            if (server == null)
+            {
+                Environment.ExitCode = ERROR_NETWORK_ACCESS;
                 return;
             }
             if (action == "pull")
             {
-                pull_tmdl(workspaceXMLA, datasetName, tmdlfolderPath, appId, appSecret, tenantId);
+                Pull_TMDL(server, datasetName, tmdlfolderPath);
             }
             else if (action == "deploy")
             {
-                deploy_tmdl(workspaceXMLA, datasetName, tmdlfolderPath, appId, appSecret, tenantId);
+                Deploy_TMDL(server, datasetName, tmdlfolderPath);
             }
         }
 
         /// <summary>
         /// Pulls the TMDL from the specified Power BI dataset and saves it to the specified TMDL folder.
         /// </summary>
-        /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
+        /// <param name="server">PBI Server</param>
         /// <param name="datasetName">The name of the Power BI dataset.</param>
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
-        static void pull_tmdl(string workspaceXMLA, string datasetName, string tmdlfolderPath, string appId, string appSecret, string tenantId)
+        private static void Pull_TMDL(Server server, string datasetName, string tmdlfolderPath)
         {
             try
             {
-                using (var server = Connect(workspaceXMLA, appId, appSecret, tenantId))
+                using (server)
                 {
-                    if (server == null) { return; }
+                    LogToConsole($"Getting Databases for {datasetName}");
                     var database = server.Databases.GetByName(datasetName);
+                    LogToConsole($"Serializing model from {database.Name} to {tmdlfolderPath}");
                     TmdlSerializer.SerializeModelToFolder(database.Model, tmdlfolderPath);
+                    LogToConsole($"Model pulled successfully to {tmdlfolderPath}");
                 }
             }
             catch (Exception ex)
@@ -255,18 +291,20 @@ namespace tmdl_tool
         /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
         /// <param name="datasetName">The name of the Power BI dataset.</param>
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
-        static void deploy_tmdl(string workspaceXMLA, string datasetName, string tmdlfolderPath, string appId, string appSecret, string tenantId)
+        private static void Deploy_TMDL(Server server, string datasetName, string tmdlfolderPath)
         {
             try
             {
                 var model = TmdlSerializer.DeserializeModelFromFolder(tmdlfolderPath);
-                using (var server = Connect(workspaceXMLA, appId, appSecret, tenantId))
+                using (server)
                 {
-                    if (server == null) { return; }
                     using (var remoteDatabase = server.Databases.GetByName(datasetName))
                     {
+                        LogToConsole($"Deploying model to {datasetName}");
                         model.CopyTo(remoteDatabase.Model);
+                        LogToConsole($"Saving changes to {datasetName}");
                         remoteDatabase.Model.SaveChanges();
+                        LogToConsole($"Model deployed successfully to {datasetName}");
                     }
                 }
             }
@@ -283,7 +321,7 @@ namespace tmdl_tool
         /// </summary>
         /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
         /// <returns>A Server object representing the connected workspace, or null if the connection failed.</returns>
-        static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId)
+        static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
         {
 
             try
@@ -292,13 +330,20 @@ namespace tmdl_tool
 
                 // Check if we have an access token in Environment variable
                 var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
-                if (null != tokenString)
+                if (! string.IsNullOrEmpty(accessToken))
                 {
-                    Console.WriteLine("Using Access Token from Environment Variable");
+                    LogToConsole("Using Access Token from Settings / Command Line");
+                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow + TimeSpan.FromHours(1));
+                    server.AccessToken = accessTokenObj;
+                }
+                else if (! string.IsNullOrEmpty(tokenString))
+                {
+                    LogToConsole("Using Access Token from Environment Variable");
                     var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 };
                 string connectionString = $"Data source={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret}";
+                LogToConsole($"Connecting to {workspaceXMLA}");
                 server.Connect(connectionString);
                 return server;
             }
@@ -353,9 +398,30 @@ namespace tmdl_tool
             /// </summary>
             public string? Action { get; set; }
 
+            /// <summary>
+            /// Application ID of the Azure AD app.
+            /// </summary>
             public string? AppId { get; set; }
+
+            /// <summary>
+            /// Password of the Azure AD app.
+            /// </summary>
             public string? AppSecret { get; set; }
+
+            /// <summary>
+            /// Tenant ID of the Azure AD app.
+            /// </summary>
             public string? TenantId { get; set; }
+
+            /// <summary>
+            /// Externally aquired Access Token for Azure AD app.
+            /// </summary>
+            public string? AccessToken { get; set; }
+
+            /// <summary>
+            /// Verbose output
+            /// </summary>
+            public bool Verbose { get; set; }
         }
     }
 }
