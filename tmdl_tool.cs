@@ -27,7 +27,6 @@ namespace tmdl_tool
         static void Main(string[] args)
         {
 
-            // Setting tmdl_tool.VersionString
             var assemblyInfo = System.Reflection.Assembly.GetExecutingAssembly().GetName();
             var tmdlLib = System.Reflection.Assembly.GetAssembly(typeof(Server));
             var libName = tmdlLib?.GetName()?.Name ?? "Unknown";
@@ -86,6 +85,10 @@ namespace tmdl_tool
             }
         }
 
+        /// <summary>
+        /// Log to console if verbose is set to true
+        /// </summary>
+        /// <param name="message"></param>
         private static void LogToConsole(string message)
         {
             if (!verbose) return;
@@ -98,11 +101,6 @@ namespace tmdl_tool
         /// Parses the command-line arguments and sets the corresponding variables.
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
-        /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
-        /// <param name="datasetName">The name of the Power BI dataset.</param>
-        /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
-        /// <param name="action">The action to perform (pull or deploy).</param>
-        /// <param name="settingsFilePath">The path to the settings file (default: settings.json).</param>
         private static void GetArguments(string[] args)
         {
             for (int i = 0; i < args.Length; i++)
@@ -201,10 +199,6 @@ namespace tmdl_tool
         /// Reads the settings file and updates the workspaceXMLA, datasetName, tmdlfolderPath, and action variables with the values from the settings file.
         /// </summary>
         /// <param name="settingsFilePath">The path to the settings file (default: settings.json).</param>
-        /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
-        /// <param name="datasetName">The name of the Power BI dataset.</param>
-        /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
-        /// <param name="action">The action to perform (pull or deploy).</param>
         private static void GetSettings(string settingsFilePath)
         {
             settingsFilePath = string.IsNullOrEmpty(settingsFilePath) ? "settings.json" : settingsFilePath;
@@ -230,6 +224,10 @@ namespace tmdl_tool
         /// <param name="datasetName">The name of the Power BI dataset.</param>
         /// <param name="tmdlfolderPath">The path to the TMDL folder.</param>
         /// <param name="action">The action to perform (pull or deploy).</param>
+        /// <param name="appId">Application Id</param>
+        /// <param name="appSecret">Application Secret</param>
+        /// <param name="tenantId">Tenant Id</param>
+        /// <param name="accessToken">Access Token</param>
         private static void PBI(string workspaceXMLA, string datasetName, string tmdlfolderPath, string action, string appId, string appSecret, string tenantId, string accessToken)
         {
             string[] actions = { "pull", "deploy" };
@@ -326,6 +324,10 @@ namespace tmdl_tool
         /// Connects to the specified Power BI workspace using the provided URL.
         /// </summary>
         /// <param name="workspaceXMLA">The URL of the Power BI workspace.</param>
+        /// <param name="appId">The application ID for authentication.</param>
+        /// <param name="appSecret">The application secret for authentication.</param>
+        /// <param name="tenantId">The tenant ID for authentication.</param>
+        /// <param name="accessToken">The access token for authentication.</param>
         /// <returns>A Server object representing the connected workspace, or null if the connection failed.</returns>
         private static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
         {
