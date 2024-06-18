@@ -32,7 +32,7 @@ namespace tmdl_tool
 
             GetSettings(runtimeSettings.SettingsFilePath);
 
-            LogToConsole("Starting");
+            LogToConsole($"Starting with options:\n{JsonConvert.SerializeObject(runtimeSettings.GetSafe(), Formatting.Indented)}");
 
             PBI(runtimeSettings);
 
@@ -412,6 +412,23 @@ namespace tmdl_tool
             /// Settings file name
             /// </summary>
             public string SettingsFilePath { get; set; } = "";
+
+            public Settings GetSafe()
+            {
+                return new Settings
+                {
+                    WorkspaceXMLA = WorkspaceXMLA,
+                    DatasetName = DatasetName,
+                    TmdlFolderPath = TmdlFolderPath,
+                    Action = Action,
+                    AppId = AppId,
+                    AppSecret = AppSecret,
+                    TenantId = TenantId,
+                    AccessToken = string.IsNullOrEmpty(AccessToken) ? "" : "********",
+                    Verbose = Verbose,
+                    SettingsFilePath = SettingsFilePath
+                };
+            }
         }
     }
 }
