@@ -422,7 +422,7 @@ namespace tmdl_tool
                     TmdlFolderPath = TmdlFolderPath,
                     Action = Action,
                     AppId = AppId,
-                    AppSecret = AppSecret,
+                    AppSecret = string.IsNullOrEmpty(AppSecret) ? "" : "********",
                     TenantId = TenantId,
                     AccessToken = string.IsNullOrEmpty(AccessToken) ? "" : "********",
                     Verbose = Verbose,
