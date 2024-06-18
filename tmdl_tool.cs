@@ -215,7 +215,7 @@ namespace tmdl_tool
                 return;
             }
 
-            var server = Connect(settings.WorkspaceXMLA, settings.AppId, settings.AppSecret, settings.TenantId, settings.AccessToken);
+            var server = Connect(settings);
             if (server == null)
             {
                 Environment.ExitCode = ERROR_NETWORK_ACCESS;
@@ -306,7 +306,7 @@ namespace tmdl_tool
         /// <param name="tenantId">The tenant ID for authentication.</param>
         /// <param name="accessToken">The access token for authentication.</param>
         /// <returns>A Server object representing the connected workspace, or null if the connection failed.</returns>
-        private static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
+        private static Server? Connect(Settings settings)
         {
 
             try
@@ -315,10 +315,10 @@ namespace tmdl_tool
 
                 // Check if we have an access token in Environment variable
                 var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
-                if (! string.IsNullOrEmpty(accessToken))
+                if (! string.IsNullOrEmpty(settings.AccessToken))
                 {
                     LogToConsole("Using Access Token from Settings / Command Line");
-                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow + TimeSpan.FromHours(1));
+                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(settings.AccessToken, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 }
                 else if (! string.IsNullOrEmpty(tokenString))
@@ -327,8 +327,8 @@ namespace tmdl_tool
                     var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 };
-                string connectionString = $"Data source={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret}";
-                LogToConsole($"Connecting to {workspaceXMLA}");
+                string connectionString = $"Data source={settings.WorkspaceXMLA};User ID=app:{settings.AppId}@{settings.TenantId};Password={settings.AppSecret}";
+                LogToConsole($"Connecting to {settings.WorkspaceXMLA}");
                 server.Connect(connectionString);
                 return server;
             }
