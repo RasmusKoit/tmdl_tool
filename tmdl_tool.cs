@@ -57,7 +57,7 @@ namespace tmdl_tool
                 Console.WriteLine("  -ai\tThe application ID of the Azure AD app \n\t--appid \"<id>\"");
                 Console.WriteLine("  -as\tThe application secret of the Azure AD app \n\t--appsecret \"<secret>\"");
                 Console.WriteLine("  -ti\tThe tenant ID of the Azure AD app \n\t--tenantid \"<id>\"");
-                Console.WriteLine("  -at\tExternally aquired Access Token for Azure AD app \n\t--accessToken \"<id>\"");
+                Console.WriteLine("  -at\tExternally aquired Access Token for Azure AD app \n\t--accessToken \"<AccessToken>\"");
                 Console.WriteLine("  -v\tShow progress on STDOUT \n\t--verbose \"<true|false>\" (default: true)");
                 Console.WriteLine();
                 Console.WriteLine("  -h\tShow this help message \n\t--help\n");
