@@ -175,6 +175,7 @@ namespace tmdl_tool
             settingsFilePath = string.IsNullOrEmpty(settingsFilePath) ? "settings.json" : settingsFilePath;
             if (File.Exists(settingsFilePath))
             {
+                runtimeSettings.SettingsFilePath = settingsFilePath;
                 var settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFilePath));
                 if (settings == null)
                 {
