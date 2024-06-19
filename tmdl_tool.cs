@@ -13,16 +13,7 @@ namespace tmdl_tool
 
         private static string VersionString = "";
 
-        private static string workspaceXMLA = "";
-        private static string datasetName = "";
-        private static string tmdlfolderPath = "";
-        private static string action = "";
-        private static string settingsFilePath = "";
-        private static string appId = "";
-        private static string appSecret = "";
-        private static string tenantId = "";
-        private static string accessToken = "";
-        private static bool verbose = true;
+        private static Settings runtimeSettings = new();
 
         static void Main(string[] args)
         {
@@ -39,11 +30,11 @@ namespace tmdl_tool
 
             GetArguments(args);
 
-            GetSettings(settingsFilePath);
+            GetSettings(runtimeSettings.SettingsFilePath);
 
-            LogToConsole("Starting");
+            LogToConsole($"Starting with options:\n{JsonConvert.SerializeObject(runtimeSettings.GetSafe(), Formatting.Indented)}");
 
-            PBI(workspaceXMLA, datasetName, tmdlfolderPath, action, appId, appSecret, tenantId, accessToken);
+            PBI(runtimeSettings);
 
         }
 
@@ -91,7 +82,7 @@ namespace tmdl_tool
         /// <param name="message"></param>
         private static void LogToConsole(string message)
         {
-            if (!verbose) return;
+            if (!runtimeSettings.Verbose) return;
             var timeStampString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             Console.WriteLine($"{timeStampString} [{VersionString}]: {message}");
         }
@@ -117,64 +108,44 @@ namespace tmdl_tool
                     switch (arg.ToLower())
                     {
                         case "--workspacexmla":
-                            workspaceXMLA = value ?? "";
+                        case "-w":
+                            runtimeSettings.WorkspaceXMLA = value ?? "";
                             break;
                         case "--datasetname":
-                            datasetName = value ?? "";
+                        case "-d":
+                            runtimeSettings.DatasetName = value ?? "";
                             break;
                         case "--tmdlfolderpath":
-                            tmdlfolderPath = value ?? "";
+                        case "-t":
+                            runtimeSettings.TmdlFolderPath = value ?? "";
                             break;
                         case "--action":
-                            action = value ?? "";
+                        case "-a":
+                            runtimeSettings.Action = value.ToLower() ?? "";
                             break;
                         case "--settingsfilepath":
-                            settingsFilePath = value ?? "";
+                        case "-s":
+                            runtimeSettings.SettingsFilePath = value ?? "";
                             break;
                         case "--appid":
-                            appId = value ?? "";
+                        case "-ai":
+                            runtimeSettings.AppId = value ?? "";
                             break;
                         case "--appsecret":
-                            appSecret = value ?? "";
+                        case "-as":
+                            runtimeSettings.AppSecret = value ?? "";
                             break;
                         case "--tenantid":
-                            tenantId = value ?? "";
+                        case "-ti":
+                            runtimeSettings.TenantId = value ?? "";
                             break;
                         case "--accesstoken":
-                            accessToken = value ?? "";
+                        case "-at":
+                            runtimeSettings.AccessToken = value ?? "";
                             break;
                         case "--verbose":
-                            verbose = bool.Parse(value);
-                            break;
-                        case "-w":
-                            workspaceXMLA = value ?? "";
-                            break;
-                        case "-d":
-                            datasetName = value ?? "";
-                            break;
-                        case "-t":
-                            tmdlfolderPath = value ?? "";
-                            break;
-                        case "-a":
-                            action = value ?? "";
-                            break;
-                        case "-s":
-                            settingsFilePath = value ?? "";
-                            break;
-                        case "-ai":
-                            appId = value ?? "";
-                            break;
-                        case "-as":
-                            appSecret = value ?? "";
-                            break;
-                        case "-ti":
-                            tenantId = value ?? "";
-                            break;
-                        case "-at":
-                            accessToken = value ?? "";
-                            break;
                         case "-v":
-                            verbose = true;
+                            runtimeSettings.Verbose = bool.Parse(value);
                             break;
                         default:
                             Console.WriteLine($"Unknown argument: {arg}");
@@ -184,7 +155,7 @@ namespace tmdl_tool
                 }
                 else if (i == 0 && (arg == "pull" || arg == "deploy"))
                 {
-                    action = arg;
+                    runtimeSettings.Action = arg;
                 }
                 else
                 {
@@ -204,16 +175,23 @@ namespace tmdl_tool
             settingsFilePath = string.IsNullOrEmpty(settingsFilePath) ? "settings.json" : settingsFilePath;
             if (File.Exists(settingsFilePath))
             {
+                runtimeSettings.SettingsFilePath = settingsFilePath;
                 var settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFilePath));
-                workspaceXMLA = settings?.WorkspaceXMLA ?? workspaceXMLA;
-                datasetName = settings?.DatasetName ?? datasetName;
-                tmdlfolderPath = settings?.TmdlFolderPath ?? tmdlfolderPath;
-                action = settings?.Action ?? action;
-                appId = settings?.AppId ?? appId;
-                appSecret = settings?.AppSecret ?? appSecret;
-                tenantId = settings?.TenantId ?? tenantId;
-                accessToken = settings?.AccessToken ?? accessToken;
-                verbose = settings?.Verbose ?? verbose;
+                if (settings == null)
+                {
+                    Console.WriteLine("Error: Unable to read settings file.");
+                    Environment.ExitCode = ERROR_PATH_NOT_FOUND;
+                    return;
+                }
+                runtimeSettings.WorkspaceXMLA = string.IsNullOrEmpty(settings.WorkspaceXMLA) ? runtimeSettings.WorkspaceXMLA : settings.WorkspaceXMLA;
+                runtimeSettings.DatasetName = string.IsNullOrEmpty(settings.DatasetName) ? runtimeSettings.DatasetName : settings.DatasetName;
+                runtimeSettings.TmdlFolderPath = string.IsNullOrEmpty(settings.TmdlFolderPath) ? runtimeSettings.TmdlFolderPath : settings.TmdlFolderPath;
+                runtimeSettings.Action = string.IsNullOrEmpty(settings.Action) ? runtimeSettings.Action : settings.Action.ToLower();
+                runtimeSettings.AppId = string.IsNullOrEmpty(settings.AppId) ? runtimeSettings.AppId : settings.AppId;
+                runtimeSettings.AppSecret = string.IsNullOrEmpty(settings.AppSecret) ? runtimeSettings.AppSecret : settings.AppSecret;
+                runtimeSettings.TenantId = string.IsNullOrEmpty(settings.TenantId) ? runtimeSettings.TenantId : settings.TenantId;
+                runtimeSettings.AccessToken = string.IsNullOrEmpty(settings.AccessToken) ? runtimeSettings.AccessToken : settings.AccessToken;
+                runtimeSettings.Verbose = ! settings.Verbose ? false : runtimeSettings.Verbose;
             }
         }
 
@@ -228,29 +206,29 @@ namespace tmdl_tool
         /// <param name="appSecret">Application Secret</param>
         /// <param name="tenantId">Tenant Id</param>
         /// <param name="accessToken">Access Token</param>
-        private static void PBI(string workspaceXMLA, string datasetName, string tmdlfolderPath, string action, string appId, string appSecret, string tenantId, string accessToken)
+        private static void PBI(Settings settings)
         {
             string[] actions = { "pull", "deploy" };
-            if (Array.IndexOf(actions, action) < 0)
+            if (Array.IndexOf(actions, settings.Action) < 0)
             {
                 Console.WriteLine("Please specify action as pull or deploy (-h | --help for Help)");
                 Environment.ExitCode = ERROR_INVALID_ACTION;
                 return;
             }
 
-            var server = Connect(workspaceXMLA, appId, appSecret, tenantId, accessToken);
+            var server = Connect(settings);
             if (server == null)
             {
                 Environment.ExitCode = ERROR_NETWORK_ACCESS;
                 return;
             }
-            if (action == "pull")
+            if (settings.Action == "pull")
             {
-                Pull_TMDL(server, datasetName, tmdlfolderPath);
+                Pull_TMDL(server, settings.DatasetName, settings.TmdlFolderPath);
             }
-            else if (action == "deploy")
+            else if (settings.Action == "deploy")
             {
-                Deploy_TMDL(server, datasetName, tmdlfolderPath);
+                Deploy_TMDL(server, settings.DatasetName, settings.TmdlFolderPath);
             }
         }
 
@@ -329,7 +307,7 @@ namespace tmdl_tool
         /// <param name="tenantId">The tenant ID for authentication.</param>
         /// <param name="accessToken">The access token for authentication.</param>
         /// <returns>A Server object representing the connected workspace, or null if the connection failed.</returns>
-        private static Server? Connect(string workspaceXMLA, string appId, string appSecret, string tenantId, string accessToken)
+        private static Server? Connect(Settings settings)
         {
 
             try
@@ -338,10 +316,10 @@ namespace tmdl_tool
 
                 // Check if we have an access token in Environment variable
                 var tokenString = Environment.GetEnvironmentVariable("tmdl_accesstoken");
-                if (! string.IsNullOrEmpty(accessToken))
+                if (! string.IsNullOrEmpty(settings.AccessToken))
                 {
                     LogToConsole("Using Access Token from Settings / Command Line");
-                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(accessToken, DateTime.UtcNow + TimeSpan.FromHours(1));
+                    var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(settings.AccessToken, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 }
                 else if (! string.IsNullOrEmpty(tokenString))
@@ -350,8 +328,8 @@ namespace tmdl_tool
                     var accessTokenObj = new Microsoft.AnalysisServices.AccessToken(tokenString, DateTime.UtcNow + TimeSpan.FromHours(1));
                     server.AccessToken = accessTokenObj;
                 };
-                string connectionString = $"Data source={workspaceXMLA};User ID=app:{appId}@{tenantId};Password={appSecret}";
-                LogToConsole($"Connecting to {workspaceXMLA}");
+                string connectionString = $"Data source={settings.WorkspaceXMLA};User ID=app:{settings.AppId}@{settings.TenantId};Password={settings.AppSecret}";
+                LogToConsole($"Connecting to {settings.WorkspaceXMLA}");
                 server.Connect(connectionString);
                 return server;
             }
@@ -389,47 +367,69 @@ namespace tmdl_tool
             /// <summary>
             /// The URL of the Power BI workspace.
             /// </summary>
-            public string? WorkspaceXMLA { get; set; }
+            public string WorkspaceXMLA { get; set; } = "";
 
             /// <summary>
             /// The name of the Power BI dataset.
             /// </summary>
-            public string? DatasetName { get; set; }
+            public string DatasetName { get; set; } = "";
 
             /// <summary>
             /// The path to the TMDL folder.
             /// </summary>
-            public string? TmdlFolderPath { get; set; }
+            public string TmdlFolderPath { get; set; } = "";
 
             /// <summary>
             /// The action to perform (pull or deploy).
             /// </summary>
-            public string? Action { get; set; }
+            public string Action { get; set; } = "";
 
             /// <summary>
             /// Application ID of the Azure AD app.
             /// </summary>
-            public string? AppId { get; set; }
+            public string AppId { get; set; } = "";
 
             /// <summary>
             /// Password of the Azure AD app.
             /// </summary>
-            public string? AppSecret { get; set; }
+            public string AppSecret { get; set; } = "";
 
             /// <summary>
             /// Tenant ID of the Azure AD app.
             /// </summary>
-            public string? TenantId { get; set; }
+            public string TenantId { get; set; } = "";
 
             /// <summary>
             /// Externally aquired Access Token for Azure AD app.
             /// </summary>
-            public string? AccessToken { get; set; }
+            public string AccessToken { get; set; } = "";
 
             /// <summary>
             /// Verbose output
             /// </summary>
-            public bool? Verbose { get; set; }
+            public bool Verbose { get; set; } = true;
+
+            /// <summary>
+            /// Settings file name
+            /// </summary>
+            public string SettingsFilePath { get; set; } = "";
+
+            public Settings GetSafe()
+            {
+                return new Settings
+                {
+                    WorkspaceXMLA = WorkspaceXMLA,
+                    DatasetName = DatasetName,
+                    TmdlFolderPath = TmdlFolderPath,
+                    Action = Action,
+                    AppId = AppId,
+                    AppSecret = string.IsNullOrEmpty(AppSecret) ? "" : "********",
+                    TenantId = TenantId,
+                    AccessToken = string.IsNullOrEmpty(AccessToken) ? "" : "********",
+                    Verbose = Verbose,
+                    SettingsFilePath = SettingsFilePath
+                };
+            }
         }
     }
 }
